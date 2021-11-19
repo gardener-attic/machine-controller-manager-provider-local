@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+case "${1:-}" in
+  run)
+    # by default, nerdctl run (like docker run) uses the bridge network. However, the respective CNI plugin is not
+    # installed so we need to add --net=none to run the hyperkube image during node bootstrap
+    exec nerdctl run --net=none "${@:2}"
+    ;;
+  cp)
+    # cp command is a docker-only feature and nerdctl doesn't have an equivalent command
+    # mimic cp by copying from rootfs dir (really hacky)
+    container_id="${2%:*}"
+    copy_src="${2#*:}"
+    rootfs_path="/run/containerd/io.containerd.runtime.v2.task/default/$container_id/rootfs"
+    copy_dest="${3}"
+    cp "$rootfs_path$copy_src" "$copy_dest"
+    ;;
+  *)
+    # delegate all other commands to nerdctl
+    exec nerdctl "$@"
+    ;;
+esac

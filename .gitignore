@@ -1,0 +1,12 @@
+.note
+main
+seqdiagram.diag
+cmi-plugin
+*coverprofile.out*
+bin/
+.idea
+/dev
+.cache_ggshield
+.vscode
+*.test
+/hack/tools/bin

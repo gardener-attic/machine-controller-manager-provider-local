@@ -1,0 +1,25 @@
+apiVersion: machine.sapcloud.io/v1alpha1
+kind: MachineDeployment
+metadata:
+  name: test-machine-deployment
+  namespace: default
+spec:
+  replicas: 3
+  minReadySeconds: 60
+  progressDeadlineSeconds: 120
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      test-label: test-label
+  template:
+    metadata:
+      labels:
+        test-label: test-label
+    spec:
+      class:
+        kind: MachineClass
+        name: test-class

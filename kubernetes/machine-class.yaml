@@ -1,0 +1,11 @@
+apiVersion: machine.sapcloud.io/v1alpha1
+kind: MachineClass
+metadata:
+  name: test-class
+  namespace: default
+provider: local
+providerSpec:
+  image: timebertt/kind-node@sha256:2909ded4504ad3f03aad545e2046fca56bec4532023bc271295d03c04ef84dde
+secretRef:
+  name: test-secret
+  namespace: default

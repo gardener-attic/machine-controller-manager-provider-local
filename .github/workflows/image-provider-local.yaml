@@ -1,0 +1,92 @@
+name: machine-controller-manager-provider-local image
+
+on:
+  release:
+    types:
+    - published
+  push:
+    branches:
+    - master
+    tags:
+    - v*
+    paths-ignore:
+    - 'docs/**'
+    - '**/*.md'
+  pull_request:
+    paths-ignore:
+    - 'docs/**'
+    - '**/*.md'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Cache Go modules and build
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Verify
+      run: make verify
+
+  buildAndPush:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Docker meta
+      uses: docker/metadata-action@v3
+      id: meta
+      with:
+        images: |
+          ghcr.io/${{ github.repository_owner }}/machine-controller-manager-provider-local
+        tags: |
+          type=semver,pattern={{raw}}
+          type=schedule
+          type=ref,event=branch
+          type=ref,event=tag
+          type=ref,event=pr
+          type=sha
+        flavor: |
+          latest=${{ github.ref == 'refs/heads/master' }}
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: linux/amd64,linux/arm64
+
+    - name: Set up Docker buildx
+      uses: docker/setup-buildx-action@v1
+      with:
+        install: true
+
+    - name: Login to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
