@@ -4,7 +4,7 @@ ARG TARGETOS
 ARG TARGETARCH
 
 RUN apt-get update -yq && \
-    apt-get install -yq --no-install-recommends wget
+    apt-get install -yq --no-install-recommends wget apparmor apparmor-utils
 
 # Gardener's cloud-config-downloader still needs the docker CLI to be present in the image for preloading the hyperkube image,
 # see https://github.com/gardener/gardener/issues/4673
