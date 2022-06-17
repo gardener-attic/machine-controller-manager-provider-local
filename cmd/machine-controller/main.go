@@ -48,9 +48,16 @@ func main() {
 	s := options.NewMCServer()
 	s.AddFlags(pflag.CommandLine)
 
+	options := logs.NewOptions()
+	options.AddFlags(pflag.CommandLine)
+
 	flag.InitFlags()
 	logs.InitLogs()
 	defer logs.FlushLogs()
+	if err := options.ValidateAndApply(); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
 
 	driver, err := newDriver(s.ControlKubeconfig)
 	if err != nil {
