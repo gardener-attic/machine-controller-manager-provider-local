@@ -38,6 +38,12 @@ func (d *localDriver) DeleteMachine(ctx context.Context, req *driver.DeleteMachi
 	klog.V(3).Infof("Machine deletion request has been received for %q", req.Machine.Name)
 	defer klog.V(3).Infof("Machine deletion request has been processed for %q", req.Machine.Name)
 
+	userDataSecret := userDataSecretForMachine(req.Machine)
+	if err := d.client.Delete(ctx, userDataSecret); client.IgnoreNotFound(err) != nil {
+		// Unknown leads to short retry in machine controller
+		return nil, status.Error(codes.Unknown, fmt.Sprintf("error deleting user data secret: %s", err.Error()))
+	}
+
 	pod := podForMachine(req.Machine)
 	if err := d.client.Delete(ctx, pod); err != nil {
 		if !apierrors.IsNotFound(err) {
