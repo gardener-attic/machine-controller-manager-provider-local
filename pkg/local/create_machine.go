@@ -27,7 +27,6 @@ import (
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/codes"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/status"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
@@ -60,17 +59,8 @@ func (d *localDriver) CreateMachine(ctx context.Context, req *driver.CreateMachi
 }
 
 func (d *localDriver) applyPod(ctx context.Context, req *driver.CreateMachineRequest, providerSpec *apiv1alpha1.ProviderSpec) (*corev1.Pod, error) {
-	userDataSecret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: corev1.SchemeGroupVersion.String(),
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      userDataSecretName(req.Machine.Name),
-			Namespace: req.Machine.Namespace,
-		},
-		Data: map[string][]byte{"userdata": req.Secret.Data["userData"]},
-	}
+	userDataSecret := userDataSecretForMachine(req.Machine)
+	userDataSecret.Data = map[string][]byte{"userdata": req.Secret.Data["userData"]}
 
 	if err := controllerutil.SetControllerReference(req.Machine, userDataSecret, d.client.Scheme()); err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("could not set userData secret ownership: %s", err.Error()))

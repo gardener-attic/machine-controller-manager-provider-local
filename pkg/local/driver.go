@@ -58,10 +58,19 @@ func podForMachine(machine *machinev1alpha1.Machine) *corev1.Pod {
 	}
 }
 
-func podName(machineName string) string {
-	return "machine-" + machineName
+func userDataSecretForMachine(machine *machinev1alpha1.Machine) *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName(machine.Name) + "-userdata",
+			Namespace: machine.Namespace,
+		},
+	}
 }
 
-func userDataSecretName(machineName string) string {
-	return podName(machineName) + "-userdata"
+func podName(machineName string) string {
+	return "machine-" + machineName
 }
