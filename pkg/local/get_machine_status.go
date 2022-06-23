@@ -23,7 +23,6 @@ import (
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/codes"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/status"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,8 +36,8 @@ func (d *localDriver) GetMachineStatus(ctx context.Context, req *driver.GetMachi
 	klog.V(3).Infof("Machine status request has been received for %q", req.Machine.Name)
 	defer klog.V(3).Infof("Machine status request has been processed for %q", req.Machine.Name)
 
-	pod := &corev1.Pod{}
-	if err := d.client.Get(ctx, client.ObjectKey{Name: req.Machine.Name, Namespace: req.Machine.Namespace}, pod); err != nil {
+	pod := podForMachine(req.Machine)
+	if err := d.client.Get(ctx, client.ObjectKeyFromObject(pod), pod); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, status.Error(codes.NotFound, err.Error())
 		}

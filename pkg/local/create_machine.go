@@ -80,94 +80,85 @@ func (d *localDriver) applyPod(ctx context.Context, req *driver.CreateMachineReq
 		return nil, status.Error(codes.Internal, fmt.Sprintf("error applying user data secret: %s", err.Error()))
 	}
 
-	pod := &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: corev1.SchemeGroupVersion.String(),
-			Kind:       "Pod",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName(req.Machine.Name),
-			Namespace: req.Machine.Namespace,
-			Labels: map[string]string{
-				labelKeyProvider: apiv1alpha1.Provider,
-				labelKeyApp:      labelValueMachine,
-				"networking.gardener.cloud/from-prometheus":      "allowed",
-				"networking.gardener.cloud/to-dns":               "allowed",
-				"networking.gardener.cloud/to-private-networks":  "allowed",
-				"networking.gardener.cloud/to-public-networks":   "allowed",
-				"networking.gardener.cloud/to-shoot-networks":    "allowed",
-				"networking.gardener.cloud/to-shoot-apiserver":   "allowed",
-				"networking.gardener.cloud/from-shoot-apiserver": "allowed",
+	pod := podForMachine(req.Machine)
+	pod.Labels = map[string]string{
+		labelKeyProvider: apiv1alpha1.Provider,
+		labelKeyApp:      labelValueMachine,
+		"networking.gardener.cloud/from-prometheus":      "allowed",
+		"networking.gardener.cloud/to-dns":               "allowed",
+		"networking.gardener.cloud/to-private-networks":  "allowed",
+		"networking.gardener.cloud/to-public-networks":   "allowed",
+		"networking.gardener.cloud/to-shoot-networks":    "allowed",
+		"networking.gardener.cloud/to-shoot-apiserver":   "allowed",
+		"networking.gardener.cloud/from-shoot-apiserver": "allowed",
+	}
+	pod.Spec = corev1.PodSpec{
+		Containers: []corev1.Container{
+			{
+				Name:            "node",
+				Image:           providerSpec.Image,
+				ImagePullPolicy: corev1.PullIfNotPresent,
+				SecurityContext: &corev1.SecurityContext{
+					Privileged: pointer.Bool(true),
+				},
+				Env: []corev1.EnvVar{{
+					Name: "NODE_NAME",
+					ValueFrom: &corev1.EnvVarSource{
+						FieldRef: &corev1.ObjectFieldSelector{
+							FieldPath: "metadata.name",
+						},
+					},
+				}},
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						Name:      "userdata",
+						MountPath: "/etc/machine",
+					},
+					{
+						Name:      "containerd",
+						MountPath: "/var/lib/containerd",
+					},
+					{
+						Name:      "modules",
+						MountPath: "/lib/modules",
+						ReadOnly:  true,
+					},
+				},
+				ReadinessProbe: &corev1.Probe{
+					ProbeHandler: corev1.ProbeHandler{
+						Exec: &corev1.ExecAction{
+							Command: []string{"sh", "-c", "/opt/bin/kubectl --kubeconfig /var/lib/kubelet/kubeconfig-real get no $NODE_NAME"},
+						},
+					},
+				},
+				Ports: []corev1.ContainerPort{{
+					ContainerPort: 30123,
+					Name:          "vpn-shoot",
+					Protocol:      corev1.ProtocolTCP,
+				}},
 			},
 		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:            "node",
-					Image:           providerSpec.Image,
-					ImagePullPolicy: corev1.PullIfNotPresent,
-					SecurityContext: &corev1.SecurityContext{
-						Privileged: pointer.Bool(true),
+		Volumes: []corev1.Volume{
+			{
+				Name: "userdata",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName:  userDataSecret.Name,
+						DefaultMode: pointer.Int32(0777),
 					},
-					Env: []corev1.EnvVar{{
-						Name: "NODE_NAME",
-						ValueFrom: &corev1.EnvVarSource{
-							FieldRef: &corev1.ObjectFieldSelector{
-								FieldPath: "metadata.name",
-							},
-						},
-					}},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "userdata",
-							MountPath: "/etc/machine",
-						},
-						{
-							Name:      "containerd",
-							MountPath: "/var/lib/containerd",
-						},
-						{
-							Name:      "modules",
-							MountPath: "/lib/modules",
-							ReadOnly:  true,
-						},
-					},
-					ReadinessProbe: &corev1.Probe{
-						ProbeHandler: corev1.ProbeHandler{
-							Exec: &corev1.ExecAction{
-								Command: []string{"sh", "-c", "/opt/bin/kubectl --kubeconfig /var/lib/kubelet/kubeconfig-real get no $NODE_NAME"},
-							},
-						},
-					},
-					Ports: []corev1.ContainerPort{{
-						ContainerPort: 30123,
-						Name:          "vpn-shoot",
-						Protocol:      corev1.ProtocolTCP,
-					}},
 				},
 			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "userdata",
-					VolumeSource: corev1.VolumeSource{
-						Secret: &corev1.SecretVolumeSource{
-							SecretName:  userDataSecret.Name,
-							DefaultMode: pointer.Int32(0777),
-						},
-					},
+			{
+				Name: "containerd",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
 				},
-				{
-					Name: "containerd",
-					VolumeSource: corev1.VolumeSource{
-						EmptyDir: &corev1.EmptyDirVolumeSource{},
-					},
-				},
-				{
-					Name: "modules",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/lib/modules",
-						},
+			},
+			{
+				Name: "modules",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: "/lib/modules",
 					},
 				},
 			},
