@@ -17,7 +17,10 @@ package local
 import (
 	"context"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -42,10 +45,32 @@ func (d *localDriver) GenerateMachineClassForMigration(_ context.Context, _ *dri
 	return &driver.GenerateMachineClassForMigrationResponse{}, nil
 }
 
-func podName(machineName string) string {
-	return "machine-" + machineName
+func podForMachine(machine *machinev1alpha1.Machine) *corev1.Pod {
+	return &corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Pod",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName(machine.Name),
+			Namespace: machine.Namespace,
+		},
+	}
 }
 
-func userDataSecretName(machineName string) string {
-	return podName(machineName) + "-userdata"
+func userDataSecretForMachine(machine *machinev1alpha1.Machine) *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Secret",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName(machine.Name) + "-userdata",
+			Namespace: machine.Namespace,
+		},
+	}
+}
+
+func podName(machineName string) string {
+	return "machine-" + machineName
 }
