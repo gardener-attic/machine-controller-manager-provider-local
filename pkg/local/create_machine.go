@@ -79,6 +79,7 @@ func (d *localDriver) applyPod(ctx context.Context, req *driver.CreateMachineReq
 		"networking.gardener.cloud/to-private-networks":  "allowed",
 		"networking.gardener.cloud/to-public-networks":   "allowed",
 		"networking.gardener.cloud/to-shoot-networks":    "allowed",
+		"networking.gardener.cloud/to-seed-apiserver":    "allowed", // needed for ManagedSeeds such that gardenlets deployed to these Machines can talk to the seed's kube-apiserver (which is the same like the garden cluster kube-apiserver)
 		"networking.gardener.cloud/to-shoot-apiserver":   "allowed",
 		"networking.gardener.cloud/from-shoot-apiserver": "allowed",
 	}
