@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gardener/gardener v1.48.4
-	github.com/gardener/machine-controller-manager v0.45.0
+	github.com/gardener/machine-controller-manager v0.47.0
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/tools v0.1.10
 	k8s.io/api v0.23.5
@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/ahmetb/gen-crd-api-reference-docs v0.2.0 // indirect
