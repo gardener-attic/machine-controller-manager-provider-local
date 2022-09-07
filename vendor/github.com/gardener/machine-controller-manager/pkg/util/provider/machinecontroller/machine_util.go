@@ -35,7 +35,6 @@ import (
 
 	machineapi "github.com/gardener/machine-controller-manager/pkg/apis/machine"
 	"github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
-	"github.com/gardener/machine-controller-manager/pkg/controller/autoscaler"
 	"github.com/gardener/machine-controller-manager/pkg/util/nodeops"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/drain"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
@@ -739,11 +738,6 @@ func (c *controller) reconcileMachineHealth(ctx context.Context, machine *v1alph
 					timeOutDuration,
 					machine.Status.Conditions,
 				)
-				// ensuring rollout of machineDeployment is not happening
-				if c.isRollingOut(machine) {
-					klog.V(2).Infof("Skipping marking machine=%s Failed, as rollout for corresponding machineDeployment is happening, will retry in next sync", machine.Name)
-					return machineutils.MediumRetry, nil
-				}
 
 				machineDeployName := getMachineDeploymentName(machine)
 				// creating lock for machineDeployment, if not allocated
@@ -1079,6 +1073,7 @@ func (c *controller) drainNode(ctx context.Context, deleteMachineRequest *driver
 
 			drainOptions := drain.NewDrainOptions(
 				c.targetCoreClient,
+				c.targetKubernetesVersion,
 				timeOutDuration,
 				maxEvictRetries,
 				pvDetachTimeOut,
@@ -1094,7 +1089,8 @@ func (c *controller) drainNode(ctx context.Context, deleteMachineRequest *driver
 				c.driver,
 				c.pvcLister,
 				c.pvLister,
-				c.pdbLister,
+				c.pdbV1beta1Lister,
+				c.pdbV1Lister,
 				c.nodeLister,
 				c.volumeAttachmentHandler,
 			)
@@ -1512,27 +1508,6 @@ func (c *controller) tryMarkingMachineFailed(ctx context.Context, machine, clone
 	err := fmt.Errorf("timedout waiting to acquire lock for machine %q", machine.Name)
 
 	return machineutils.ShortRetry, err
-}
-
-func (c *controller) isRollingOut(machine *v1alpha1.Machine) bool {
-	nodeName := machine.Labels["node"]
-	node, err := c.nodeLister.Get(nodeName)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return false
-		}
-		klog.Errorf("error fetching node object for machine %q", machine.Name)
-		return true
-	}
-
-	nodeAnnotations := node.Annotations
-	if nodeAnnotations == nil {
-		return false
-	} else if _, exists := nodeAnnotations[autoscaler.ClusterAutoscalerScaleDownDisabledAnnotationByMCMKey]; exists {
-		return true
-	}
-
-	return false
 }
 
 func getProviderID(machine *v1alpha1.Machine) string {

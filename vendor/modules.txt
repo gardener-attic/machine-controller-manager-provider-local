@@ -1,3 +1,6 @@
+# github.com/Masterminds/semver v1.5.0
+## explicit
+github.com/Masterminds/semver
 # github.com/PuerkitoBio/purell v1.1.1
 ## explicit
 github.com/PuerkitoBio/purell
@@ -33,7 +36,7 @@ github.com/fatih/color
 # github.com/gardener/gardener v1.48.4
 ## explicit; go 1.18
 github.com/gardener/gardener/hack
-# github.com/gardener/machine-controller-manager v0.45.0
+# github.com/gardener/machine-controller-manager v0.47.0
 ## explicit; go 1.17
 github.com/gardener/machine-controller-manager/pkg/apis/machine
 github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1
@@ -48,7 +51,6 @@ github.com/gardener/machine-controller-manager/pkg/client/informers/externalvers
 github.com/gardener/machine-controller-manager/pkg/client/informers/externalversions/machine
 github.com/gardener/machine-controller-manager/pkg/client/informers/externalversions/machine/v1alpha1
 github.com/gardener/machine-controller-manager/pkg/client/listers/machine/v1alpha1
-github.com/gardener/machine-controller-manager/pkg/controller/autoscaler
 github.com/gardener/machine-controller-manager/pkg/fakeclient
 github.com/gardener/machine-controller-manager/pkg/features
 github.com/gardener/machine-controller-manager/pkg/handlers
