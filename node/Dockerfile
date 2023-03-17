@@ -28,4 +28,11 @@ COPY run-userdata.sh /run-userdata.sh
 COPY run-userdata.service /etc/systemd/system
 RUN systemctl enable run-userdata.service
 
+# workaround issue with runc v1.1.3/4 provided by kindest/node:v1.21.14 by installing runc v1.1.2 manually
+RUN echo "Installing runc v1.1.2 ..." \
+    && curl -sSL --retry 5 --output /tmp/runc.${TARGETARCH} "https://github.com/kind-ci/containerd-nightlies/releases/download/containerd-1.6.6/runc.${TARGETARCH}" \
+    && mv /tmp/runc.${TARGETARCH} /usr/local/sbin/runc \
+    && chmod 755 /usr/local/sbin/runc \
+    && runc --version
+
 ENTRYPOINT ["/usr/local/bin/entrypoint", "/sbin/init"]
