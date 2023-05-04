@@ -19,19 +19,20 @@ import (
 	"encoding/json"
 	"fmt"
 
-	apiv1alpha1 "github.com/gardener/machine-controller-manager-provider-local/pkg/api/v1alpha1"
-	"github.com/gardener/machine-controller-manager-provider-local/pkg/api/validation"
-
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/codes"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/status"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	apiv1alpha1 "github.com/gardener/machine-controller-manager-provider-local/pkg/api/v1alpha1"
+	"github.com/gardener/machine-controller-manager-provider-local/pkg/api/validation"
 )
 
 func (d *localDriver) CreateMachine(ctx context.Context, req *driver.CreateMachineRequest) (*driver.CreateMachineResponse, error) {
@@ -47,18 +48,6 @@ func (d *localDriver) CreateMachine(ctx context.Context, req *driver.CreateMachi
 		return nil, err
 	}
 
-	pod, err := d.applyPod(ctx, req, providerSpec)
-	if err != nil {
-		return nil, err
-	}
-
-	return &driver.CreateMachineResponse{
-		ProviderID: pod.Name,
-		NodeName:   pod.Name,
-	}, nil
-}
-
-func (d *localDriver) applyPod(ctx context.Context, req *driver.CreateMachineRequest, providerSpec *apiv1alpha1.ProviderSpec) (*corev1.Pod, error) {
 	userDataSecret := userDataSecretForMachine(req.Machine)
 	userDataSecret.Data = map[string][]byte{"userdata": req.Secret.Data["userData"]}
 
@@ -70,18 +59,61 @@ func (d *localDriver) applyPod(ctx context.Context, req *driver.CreateMachineReq
 		return nil, status.Error(codes.Internal, fmt.Sprintf("error applying user data secret: %s", err.Error()))
 	}
 
-	pod := podForMachine(req.Machine)
-	pod.Labels = map[string]string{
+	if _, err := d.applyService(ctx, req); err != nil {
+		return nil, err
+	}
+
+	pod, err := d.applyPod(ctx, req, providerSpec, userDataSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return &driver.CreateMachineResponse{
+		ProviderID: pod.Name,
+		NodeName:   pod.Name,
+	}, nil
+}
+
+func (d *localDriver) applyService(ctx context.Context, req *driver.CreateMachineRequest) (*corev1.Service, error) {
+	svc := service(req.Machine)
+	svc.Spec.Type = corev1.ServiceTypeClusterIP
+	svc.Spec.ClusterIP = corev1.ClusterIPNone
+	svc.Spec.Ports = []corev1.ServicePort{{
+		Port:       10250,
+		Protocol:   corev1.ProtocolTCP,
+		TargetPort: intstr.FromInt(10250),
+	}}
+	svc.Spec.Selector = map[string]string{
 		labelKeyProvider: apiv1alpha1.Provider,
 		labelKeyApp:      labelValueMachine,
-		"networking.gardener.cloud/from-prometheus":      "allowed",
-		"networking.gardener.cloud/to-dns":               "allowed",
-		"networking.gardener.cloud/to-private-networks":  "allowed",
-		"networking.gardener.cloud/to-public-networks":   "allowed",
-		"networking.gardener.cloud/to-shoot-networks":    "allowed",
-		"networking.gardener.cloud/to-seed-apiserver":    "allowed", // needed for ManagedSeeds such that gardenlets deployed to these Machines can talk to the seed's kube-apiserver (which is the same like the garden cluster kube-apiserver)
-		"networking.gardener.cloud/to-shoot-apiserver":   "allowed",
-		"networking.gardener.cloud/from-shoot-apiserver": "allowed",
+	}
+
+	if err := d.client.Patch(ctx, svc, client.Apply, fieldOwner, client.ForceOwnership); err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("error applying service: %s", err.Error()))
+	}
+
+	return svc, nil
+}
+
+func (d *localDriver) applyPod(
+	ctx context.Context,
+	req *driver.CreateMachineRequest,
+	providerSpec *apiv1alpha1.ProviderSpec,
+	userDataSecret *corev1.Secret,
+) (
+	*corev1.Pod,
+	error,
+) {
+	pod := podForMachine(req.Machine)
+	pod.Labels = map[string]string{
+		labelKeyProvider:                   apiv1alpha1.Provider,
+		labelKeyApp:                        labelValueMachine,
+		"networking.gardener.cloud/to-dns": "allowed",
+		"networking.gardener.cloud/to-private-networks":                 "allowed",
+		"networking.gardener.cloud/to-public-networks":                  "allowed",
+		"networking.gardener.cloud/to-shoot-networks":                   "allowed",
+		"networking.gardener.cloud/to-runtime-apiserver":                "allowed", // needed for ManagedSeeds such that gardenlets deployed to these Machines can talk to the seed's kube-apiserver (which is the same like the garden cluster kube-apiserver)
+		"networking.resources.gardener.cloud/to-kube-apiserver-tcp-443": "allowed",
 	}
 	pod.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{

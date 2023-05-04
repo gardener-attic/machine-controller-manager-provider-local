@@ -45,6 +45,19 @@ func (d *localDriver) GenerateMachineClassForMigration(_ context.Context, _ *dri
 	return &driver.GenerateMachineClassForMigrationResponse{}, nil
 }
 
+func service(machine *machinev1alpha1.Machine) *corev1.Service {
+	return &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: corev1.SchemeGroupVersion.String(),
+			Kind:       "Service",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "machines",
+			Namespace: machine.Namespace,
+		},
+	}
+}
+
 func podForMachine(machine *machinev1alpha1.Machine) *corev1.Pod {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

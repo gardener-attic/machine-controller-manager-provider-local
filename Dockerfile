@@ -1,4 +1,4 @@
-FROM golang:1.18.3 AS builder
+FROM golang:1.20.4 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 WORKDIR /go/src/github.com/gardener/machine-controller-manager-provider-local
@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
       -o /usr/local/bin/machine-controller \
       cmd/machine-controller/main.go
 
-FROM alpine:3.15.4 AS machine-controller
+FROM alpine:3.17.3 AS machine-controller
 WORKDIR /
 COPY --from=builder /usr/local/bin/machine-controller /machine-controller
 ENTRYPOINT ["/machine-controller"]
