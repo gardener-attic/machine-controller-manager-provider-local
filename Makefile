@@ -14,7 +14,7 @@
 
 REPO_ROOT    := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 LEADER_ELECT := false
-#TODO (rishabh-11): Remove this version assignment when the latest g/g is vendored.
+#TODO (rishabh-11): Remove this version assignment when g/g v1.79.0 or later version is vendored.
 GOLANGCI_LINT_VERSION ?= v1.54.2
 
 #####################################################################
