@@ -1,4 +1,4 @@
-FROM kindest/node:v1.24.12
+FROM kindest/node:v1.28.0
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -10,7 +10,7 @@ RUN apt-get update -yq && \
 # see https://github.com/gardener/gardener/issues/4673
 # Install nerdctl as a (mostly) docker-compatible replacement and fool the cloud-config-downloader with a small wrapper
 # this is quite hacky but relieves us from installing docker here
-ARG NERDCTL_VERSION=1.2.1
+ARG NERDCTL_VERSION=1.6.0
 RUN curl -Lo /tmp/nerdctl.tar.gz https://github.com/containerd/nerdctl/releases/download/v$NERDCTL_VERSION/nerdctl-$NERDCTL_VERSION-$TARGETOS-$TARGETARCH.tar.gz && \
     tar Cxzvvf /usr/local/bin /tmp/nerdctl.tar.gz && \
     rm -f /tmp/nerdctl.tar.gz
