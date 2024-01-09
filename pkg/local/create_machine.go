@@ -150,7 +150,7 @@ func (d *localDriver) applyPod(
 				ReadinessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						Exec: &corev1.ExecAction{
-							Command: []string{"sh", "-c", "/opt/bin/kubectl --kubeconfig /var/lib/kubelet/kubeconfig-real get no $NODE_NAME"},
+							Command: []string{"sh", "-c", "/usr/bin/kubectl --kubeconfig /var/lib/kubelet/kubeconfig-real get no $NODE_NAME"},
 						},
 					},
 				},
