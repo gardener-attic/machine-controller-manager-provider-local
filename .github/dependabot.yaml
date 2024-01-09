@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # Create PRs for images in Dockerfile
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
