@@ -1,6 +1,6 @@
 module github.com/gardener/machine-controller-manager-provider-local
 
-go 1.21
+go 1.22
 
 require (
 	github.com/gardener/gardener v1.48.4
