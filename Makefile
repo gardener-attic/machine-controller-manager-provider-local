@@ -79,7 +79,7 @@ check: $(GOIMPORTS) $(GOLANGCI_LINT)
 
 .PHONY: generate
 generate: $(GOIMPORTS)
-	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/generate.sh ./charts/... ./cmd/... ./pkg/...
+	@$(REPO_ROOT)/vendor/github.com/gardener/gardener/hack/generate.sh ./cmd/... ./pkg/...
 
 .PHONY: format
 format: $(GOIMPORTS)
