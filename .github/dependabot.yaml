@@ -5,3 +5,8 @@ updates:
     directory: /
     schedule:
       interval: daily
+  # Create PRs for images in node/Dockerfile
+  - package-ecosystem: docker
+    directory: /node
+    schedule:
+      interval: daily
