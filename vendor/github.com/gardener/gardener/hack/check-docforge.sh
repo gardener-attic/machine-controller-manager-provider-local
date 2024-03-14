@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2021 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
+# Copyright 2021 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 set -e
 
-docCommitHash="6a018dc6a0307e64192ab48dcb90034dd0c5102a"
+docCommitHash="fa2e9f84851be81e85668986675db235bb43a6b5"
 
 echo "> Check Docforge Manifest"
 repoPath=${1-"$(readlink -f "$(dirname "${0}")/..")"}

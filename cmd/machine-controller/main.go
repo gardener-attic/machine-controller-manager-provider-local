@@ -25,8 +25,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gardener/machine-controller-manager-provider-local/pkg/local"
-
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	_ "github.com/gardener/machine-controller-manager/pkg/util/client/metrics/prometheus" // for client metric registration
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/app"
@@ -42,6 +40,8 @@ import (
 	"k8s.io/component-base/cli/flag"
 	"k8s.io/component-base/logs"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gardener/machine-controller-manager-provider-local/pkg/local"
 )
 
 func main() {
