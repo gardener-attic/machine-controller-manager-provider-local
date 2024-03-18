@@ -1,5 +1,5 @@
 # machine-controller-manager-provider-local
-
+[![REUSE status](https://api.reuse.software/badge/github.com/gardener/machine-controller-manager-provider-local)](https://api.reuse.software/info/github.com/gardener/machine-controller-manager-provider-local)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gardener/machine-controller-manager-provider-local)](https://goreportcard.com/report/github.com/gardener/machine-controller-manager-provider-local)
 
 Out of tree (controller-based) implementation for `local` as a new provider.
