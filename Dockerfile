@@ -1,4 +1,4 @@
-FROM golang:1.22.1 AS builder
+FROM golang:1.22.2 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 WORKDIR /go/src/github.com/gardener/machine-controller-manager-provider-local
