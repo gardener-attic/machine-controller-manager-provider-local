@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	apiv1alpha1 "github.com/gardener/machine-controller-manager-provider-local/pkg/api/v1alpha1"
-
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/codes"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/machinecodes/status"
@@ -18,6 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	apiv1alpha1 "github.com/gardener/machine-controller-manager-provider-local/pkg/api/v1alpha1"
 )
 
 func (d *localDriver) DeleteMachine(ctx context.Context, req *driver.DeleteMachineRequest) (*driver.DeleteMachineResponse, error) {
@@ -49,7 +49,7 @@ func (d *localDriver) DeleteMachine(ctx context.Context, req *driver.DeleteMachi
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	if err := wait.PollUntilWithContext(timeoutCtx, 5*time.Second, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextCancel(timeoutCtx, 5*time.Second, false, func(ctx context.Context) (bool, error) {
 		if err := d.client.Get(ctx, client.ObjectKeyFromObject(pod), pod); err != nil {
 			if apierrors.IsNotFound(err) {
 				return true, nil

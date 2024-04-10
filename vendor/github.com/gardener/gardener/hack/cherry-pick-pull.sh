@@ -17,7 +17,7 @@
 # This file was copied from the kubernetes/kubernetes project
 # https://github.com/kubernetes/kubernetes/blob/v1.20.0/hack/cherry_pick_pull.sh
 #
-# Modifications Copyright (c) 2021 SAP SE or an SAP affiliate company. All rights reserved.
+# Modifications Copyright 2021 SAP SE or an SAP affiliate company. All rights reserved.
 
 # Usage Instructions: https://github.com/gardener/gardener/blob/master/docs/development/process.md#cherry-picks
 
@@ -210,7 +210,7 @@ for pull in "${PULLS[@]}"; do
   pr_info=$(curl "https://api.github.com/repos/${MAIN_REPO_ORG}/${MAIN_REPO_NAME}/pulls/${pull}" -sS)
   subject=$(echo ${pr_info} | jq -cr '.title')
   SUBJECTS+=("#${pull}: ${subject}")
-  labels=$(echo ${pr_info} | jq '.labels[].name' -cr | grep -P '^(area|kind)' | sed 's|^|/|g')
+  labels=$(echo ${pr_info} | jq '.labels[].name' -cr | grep -P '^(area|kind)' | sed -e 's|/| |' -e 's|^|/|g')
   LABELS+=("${labels}")
 
   # remove the patch file from /tmp

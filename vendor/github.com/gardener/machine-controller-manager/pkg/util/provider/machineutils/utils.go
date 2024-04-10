@@ -30,6 +30,9 @@ const (
 	// InitiateDrain specifies next step as initiate node drain
 	InitiateDrain = "Initiate node drain"
 
+	// DelVolumesAttachments specifies next step as deleting volume attachments
+	DelVolumesAttachments = "Delete Volume Attachments"
+
 	// InitiateVMDeletion specifies next step as initiate VM deletion
 	InitiateVMDeletion = "Initiate VM deletion"
 
@@ -50,9 +53,6 @@ const (
 
 	// MachineClassKind is used to identify the machineClassKind for generic machineClasses
 	MachineClassKind = "MachineClass"
-
-	// MigratedMachineClass annotation helps in identifying machineClasses who have been migrated by migration controller
-	MigratedMachineClass = "machine.sapcloud.io/migrated"
 
 	// NotManagedByMCM annotation helps in identifying the nodes which are not handled by MCM
 	NotManagedByMCM = "node.machine.sapcloud.io/not-managed-by-mcm"
@@ -79,10 +79,16 @@ type RetryPeriod time.Duration
 
 // These are the valid values for RetryPeriod
 const (
+	// ConflictRetry tells the controller to retry quickly - 200 milliseconds
+	ConflictRetry RetryPeriod = RetryPeriod(200 * time.Millisecond)
 	// ShortRetry tells the controller to retry after a short duration - 15 seconds
-	ShortRetry RetryPeriod = RetryPeriod(15 * time.Second)
+	ShortRetry RetryPeriod = RetryPeriod(5 * time.Second)
 	// MediumRetry tells the controller to retry after a medium duration - 2 minutes
 	MediumRetry RetryPeriod = RetryPeriod(3 * time.Minute)
 	// LongRetry tells the controller to retry after a long duration - 10 minutes
 	LongRetry RetryPeriod = RetryPeriod(10 * time.Minute)
 )
+
+// EssentialTaints are taints on node object which if added/removed, require an immediate reconcile by machine controller
+// TODO: update this when taints for ALT updation and PostCreate operations is introduced.
+var EssentialTaints = []string{TaintNodeCriticalComponentsNotReady}
