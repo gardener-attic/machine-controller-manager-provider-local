@@ -17,4 +17,6 @@ type ProviderSpec struct {
 	APIVersion string `json:"apiVersion,omitempty"`
 	// Image is the container image to use for the node.
 	Image string `json:"image,omitempty"`
+	// IPPoolName is the name of the crd.projectcalico.org/v1.IPPool that should be used for machine pods.
+	IPPoolName string `json:"ipPoolName,omitempty"`
 }
