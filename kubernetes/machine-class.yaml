@@ -6,7 +6,8 @@ metadata:
 provider: local
 providerSpec:
   image: timebertt/kind-node@sha256:2909ded4504ad3f03aad545e2046fca56bec4532023bc271295d03c04ef84dde
-  ipPoolName: default-ipv4-ippool
+  ipPoolNameV4: default-ipv4-ippool
+  # ipPoolNameV6: default-ipv6-ippool
 secretRef:
   name: test-secret
   namespace: default

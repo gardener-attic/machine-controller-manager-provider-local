@@ -69,9 +69,15 @@ func (d *localDriver) applyPod(
 	error,
 ) {
 	pod := podForMachine(req.Machine)
-	pod.Annotations = map[string]string{
-		"cni.projectcalico.org/ipv4pools": `["` + providerSpec.IPPoolName + `"]`,
+	pod.Annotations = map[string]string{}
+
+	if providerSpec.IPPoolNameV4 != "" {
+		pod.Annotations["cni.projectcalico.org/ipv4pools"] = `["` + providerSpec.IPPoolNameV4 + `"]`
 	}
+	if providerSpec.IPPoolNameV6 != "" {
+		pod.Annotations["cni.projectcalico.org/ipv6pools"] = `["` + providerSpec.IPPoolNameV6 + `"]`
+	}
+
 	pod.Labels = map[string]string{
 		labelKeyProvider:                   apiv1alpha1.Provider,
 		labelKeyApp:                        labelValueMachine,
