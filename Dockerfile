@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
       -o /usr/local/bin/machine-controller \
       cmd/machine-controller/main.go
 
-FROM alpine:3.19.1 AS machine-controller
+FROM alpine:3.20.0 AS machine-controller
 WORKDIR /
 COPY --from=builder /usr/local/bin/machine-controller /machine-controller
 ENTRYPOINT ["/machine-controller"]
